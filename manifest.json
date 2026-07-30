@@ -1,0 +1,17 @@
+{
+  "name": "周日程",
+  "short_name": "周日程",
+  "description": "简洁的一周日程表",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

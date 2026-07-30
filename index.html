@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff">
+    <title>周日程</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">周日程</p>
+          <h1 id="weekTitle">本周</h1>
+        </div>
+        <button id="installButton" class="icon-button hidden" type="button" title="添加到主屏幕" aria-label="添加到主屏幕">
+          <span aria-hidden="true">+</span>
+        </button>
+      </header>
+
+      <nav class="week-nav" aria-label="周切换">
+        <button id="prevWeek" type="button">上一周</button>
+        <button id="today" type="button">今天</button>
+        <button id="nextWeek" type="button">下一周</button>
+      </nav>
+
+      <section class="schedule-wrap" aria-label="一周日程">
+        <div id="scheduleGrid" class="schedule-grid"></div>
+      </section>
+    </main>
+
+    <div id="overlay" class="overlay hidden"></div>
+    <section id="editor" class="editor hidden" aria-label="编辑日程" aria-modal="true" role="dialog">
+      <div class="editor-handle" aria-hidden="true"></div>
+      <div class="editor-heading">
+        <div>
+          <p id="editorDate" class="editor-meta"></p>
+          <h2 id="editorSlot">编辑</h2>
+        </div>
+        <button id="closeEditor" class="icon-button" type="button" title="关闭" aria-label="关闭">x</button>
+      </div>
+      <textarea id="editorText" rows="5" placeholder="写下要做的事情"></textarea>
+      <div class="editor-actions">
+        <button id="clearCell" class="secondary" type="button">清空</button>
+        <button id="saveCell" class="primary" type="button">完成</button>
+      </div>
+    </section>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
