@@ -31,6 +31,8 @@ body {
 }
 
 button,
+input,
+select,
 textarea {
   font: inherit;
 }
@@ -47,10 +49,17 @@ button {
 
 .topbar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   padding: 8px 4px 14px;
+}
+
+.week-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .eyebrow,
@@ -106,7 +115,10 @@ h2 {
 }
 
 .week-nav button,
-.editor-actions button {
+.editor-actions button,
+.ingredients-trigger,
+.ingredient-form button,
+.ingredient-row button {
   min-height: 42px;
   border: var(--line-width) solid var(--line);
   border-radius: var(--border-radius-sm);
@@ -117,7 +129,10 @@ h2 {
 }
 
 .week-nav button:hover,
-.editor-actions button:hover {
+.editor-actions button:hover,
+.ingredients-trigger:hover,
+.ingredient-form button:hover,
+.ingredient-row button:hover {
   border-color: #d0d0d0;
   background: #f9f9f9;
 }
@@ -133,6 +148,13 @@ h2 {
 .primary:hover {
   background: var(--accent-strong);
   border-color: var(--accent-strong);
+}
+
+.ingredients-trigger {
+  min-height: 34px;
+  width: auto;
+  padding: 0 12px;
+  white-space: nowrap;
 }
 
 .schedule-wrap {
@@ -236,7 +258,11 @@ h2 {
 .week-nav button:focus-visible,
 .icon-button:focus-visible,
 .editor-actions button:focus-visible,
-textarea:focus-visible {
+.ingredients-trigger:focus-visible,
+.ingredient-form button:focus-visible,
+.ingredient-row button:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -307,6 +333,8 @@ textarea:focus-visible {
   margin-bottom: 12px;
 }
 
+input,
+select,
 textarea {
   width: 100%;
   resize: vertical;
@@ -320,6 +348,8 @@ textarea {
   transition: all 0.2s ease;
 }
 
+input:focus,
+select:focus,
 textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
@@ -332,6 +362,90 @@ textarea:focus {
   margin-top: 12px;
 }
 
+.ingredient-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ingredient-tab {
+  min-height: 38px;
+  border: var(--line-width) solid var(--line);
+  border-radius: var(--border-radius-sm);
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ingredient-tab.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.ingredient-form {
+  display: grid;
+  grid-template-columns: 1fr 0.75fr 76px auto;
+  gap: 8px;
+}
+
+.ingredient-form input,
+.ingredient-form select {
+  min-width: 0;
+  height: 42px;
+}
+
+.ingredients-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.ingredient-row {
+  display: grid;
+  grid-template-columns: minmax(72px, 1fr) 80px 76px auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: var(--line-width) solid var(--line);
+  border-radius: var(--border-radius-sm);
+}
+
+.ingredient-row strong {
+  overflow-wrap: anywhere;
+}
+
+.ingredient-row input,
+.ingredient-row select {
+  height: 36px;
+}
+
+.ingredient-row button {
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.ingredient-row button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+@media (max-width: 460px) {
+  .ingredient-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ingredient-row {
+    grid-template-columns: 1fr 72px 68px;
+  }
+
+  .ingredient-row button {
+    grid-column: 1 / -1;
+  }
+}
 .secondary {
   color: var(--ink);
 }

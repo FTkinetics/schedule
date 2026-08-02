@@ -15,7 +15,10 @@
       <header class="topbar">
         <div>
           <p class="eyebrow">周日程</p>
-          <h1 id="weekTitle">本周</h1>
+          <div class="week-title-row">
+            <h1 id="weekTitle">本周</h1>
+            <button id="ingredientsButton" class="ingredients-trigger" type="button">厨房食材</button>
+          </div>
         </div>
         <button id="installButton" class="icon-button hidden" type="button" title="添加到主屏幕" aria-label="添加到主屏幕">
           <span aria-hidden="true">+</span>
@@ -48,6 +51,37 @@
         <button id="clearCell" class="secondary" type="button">清空</button>
         <button id="saveCell" class="primary" type="button">完成</button>
       </div>
+    </section>
+
+    <section id="ingredientsPanel" class="editor hidden" aria-label="厨房食材" aria-modal="true" role="dialog">
+      <div class="editor-handle" aria-hidden="true"></div>
+      <div class="editor-heading">
+        <div>
+          <p class="editor-meta">现在有的食材</p>
+          <h2>厨房食材</h2>
+        </div>
+        <button id="closeIngredients" class="icon-button" type="button" title="关闭" aria-label="关闭">x</button>
+      </div>
+      <div class="ingredient-tabs" role="tablist" aria-label="食材分类">
+        <button class="ingredient-tab active" type="button" data-category="meat">肉类</button>
+        <button class="ingredient-tab" type="button" data-category="vegetable">蔬菜类</button>
+      </div>
+      <form id="ingredientForm" class="ingredient-form">
+        <input id="ingredientName" type="text" autocomplete="off" placeholder="新增食材">
+        <input id="ingredientAmount" type="number" inputmode="decimal" min="0" step="0.1" placeholder="数量">
+        <select id="ingredientUnit" aria-label="单位">
+          <option value="斤">斤</option>
+          <option value="个">个</option>
+          <option value="克">克</option>
+          <option value="袋">袋</option>
+          <option value="盒">盒</option>
+          <option value="瓶">瓶</option>
+          <option value="把">把</option>
+          <option value="颗">颗</option>
+        </select>
+        <button class="primary" type="submit">添加</button>
+      </form>
+      <div id="ingredientsList" class="ingredients-list" aria-live="polite"></div>
     </section>
 
     <script src="app.js" defer></script>
