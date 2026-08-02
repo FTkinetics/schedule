@@ -52,8 +52,13 @@
   const ingredientName = document.querySelector("#ingredientName");
   const ingredientAmount = document.querySelector("#ingredientAmount");
   const ingredientUnit = document.querySelector("#ingredientUnit");
-  const ingredientTabs = Array.from(document.querySelectorAll(".ingredient-tab"));
   const ingredientsList = document.querySelector("#ingredientsList");
+  const ingredientCategoryView = document.querySelector("#ingredientCategoryView");
+  const ingredientDetailView = document.querySelector("#ingredientDetailView");
+  const ingredientCategoryTitle = document.querySelector("#ingredientCategoryTitle");
+  const ingredientPreset = document.querySelector("#ingredientPreset");
+  const ingredientBackButton = document.querySelector("#ingredientBack");
+  const ingredientCategoryButtons = Array.from(document.querySelectorAll(".ingredient-category-button"));
 
   let currentMonday = getMonday(new Date());
   let activeCell = null;
@@ -230,31 +235,46 @@
     return allUnits.map((unit) => `<option value="${escapeHtml(unit)}"${unit === selectedUnit ? " selected" : ""}>${escapeHtml(unit)}</option>`).join("");
   }
 
-  function renderIngredientTabs() {
-    ingredientTabs.forEach((tab) => {
-      const isActive = tab.dataset.category === activeIngredientCategory;
-      tab.classList.toggle("active", isActive);
-      tab.setAttribute("aria-selected", String(isActive));
-    });
+  function getCategoryName(category) {
+    return category === "vegetable" ? "蔬菜类" : "肉类";
+  }
+
+  function getCategoryPresets(category) {
+    return defaultIngredients.filter((item) => item.category === category);
+  }
+
+  function renderIngredientPresets() {
+    const presets = getCategoryPresets(activeIngredientCategory);
+    ingredientPreset.innerHTML = '<option value="">选择常用食材</option>' + presets
+      .map((item) => '<option value="' + escapeHtml(item.name) + '">' + escapeHtml(item.name) + '</option>')
+      .join("");
   }
 
   function renderIngredients() {
-    renderIngredientTabs();
-    const items = getIngredients().filter((item) => item.category === activeIngredientCategory);
+    const items = getIngredients().filter(
+      (item) => item.category === activeIngredientCategory && (item.custom || item.amount.trim())
+    );
     ingredientsList.innerHTML = "";
+
+    if (!items.length) {
+      ingredientsList.innerHTML = '<p class="ingredients-empty">还没有添加食材</p>';
+      return;
+    }
 
     items.forEach((item) => {
       const row = document.createElement("div");
       row.className = "ingredient-row";
-      row.innerHTML = `
-        <strong>${escapeHtml(item.name)}</strong>
-        <input class="ingredient-amount" type="number" inputmode="decimal" min="0" step="0.1" value="${escapeHtml(item.amount)}" placeholder="0" aria-label="${escapeHtml(item.name)}数量">
-        <select class="ingredient-unit" aria-label="${escapeHtml(item.name)}单位">${unitOptions(item.unit)}</select>
-        <button type="button" ${item.custom ? "" : "disabled"}>删除</button>
-      `;
+      row.innerHTML =
+        '<strong>' + escapeHtml(item.name) + '</strong>' +
+        '<input class="ingredient-amount" type="number" inputmode="decimal" min="0" step="0.1" value="' + escapeHtml(item.amount) + '" placeholder="0" aria-label="' + escapeHtml(item.name) + '数量">' +
+        '<select class="ingredient-unit" aria-label="' + escapeHtml(item.name) + '单位">' + unitOptions(item.unit) + '</select>' +
+        '<button type="button" ' + (item.custom ? "" : "disabled") + '>删除</button>';
 
       row.querySelector(".ingredient-amount").addEventListener("input", (event) => {
         updateIngredient(item.id, { amount: event.target.value });
+        if (!event.target.value.trim() && !item.custom) {
+          renderIngredients();
+        }
       });
       row.querySelector(".ingredient-unit").addEventListener("change", (event) => {
         updateIngredient(item.id, { unit: event.target.value });
@@ -264,16 +284,34 @@
     });
   }
 
-  function openIngredients() {
+  function showIngredientCategory(category) {
+    activeIngredientCategory = category;
+    ingredientCategoryTitle.textContent = getCategoryName(category);
+    ingredientCategoryView.classList.add("hidden");
+    ingredientDetailView.classList.remove("hidden");
+    ingredientName.value = "";
+    ingredientAmount.value = "";
+    ingredientUnit.value = category === "meat" ? "斤" : "个";
+    renderIngredientPresets();
     renderIngredients();
+    window.setTimeout(() => ingredientPreset.focus(), 80);
+  }
+
+  function showIngredientCategories() {
+    ingredientDetailView.classList.add("hidden");
+    ingredientCategoryView.classList.remove("hidden");
+  }
+
+  function openIngredients() {
+    showIngredientCategories();
     overlay.classList.remove("hidden");
     ingredientsPanel.classList.remove("hidden");
-    window.setTimeout(() => ingredientName.focus(), 80);
   }
 
   function closeIngredients() {
     overlay.classList.add("hidden");
     ingredientsPanel.classList.add("hidden");
+    showIngredientCategories();
   }
 
   function saveActiveCell() {
@@ -321,38 +359,51 @@
   ingredientsButton.addEventListener("click", openIngredients);
   closeIngredientsButton.addEventListener("click", closeIngredients);
 
-  ingredientTabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      activeIngredientCategory = tab.dataset.category;
-      ingredientUnit.value = activeIngredientCategory === "meat" ? "斤" : "个";
-      renderIngredients();
-    });
+  ingredientCategoryButtons.forEach((button) => {
+    button.addEventListener("click", () => showIngredientCategory(button.dataset.category));
+  });
+
+  ingredientBackButton.addEventListener("click", showIngredientCategories);
+
+  ingredientPreset.addEventListener("change", () => {
+    if (ingredientPreset.value) {
+      ingredientName.value = ingredientPreset.value;
+    }
   });
 
   ingredientForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    const name = ingredientName.value.trim();
+    const name = (ingredientName.value.trim() || ingredientPreset.value).trim();
     const amount = ingredientAmount.value.trim();
     const unit = ingredientUnit.value;
 
-    if (!name) {
+    if (!name || !amount) {
       return;
     }
 
     const items = getIngredients();
-    items.push({
-      id: `${activeIngredientCategory}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      category: activeIngredientCategory,
-      name,
-      amount,
-      unit,
-      custom: true,
-    });
-    saveIngredients(items);
+    const existing = items.find(
+      (item) => item.category === activeIngredientCategory && item.name === name
+    );
+
+    if (existing) {
+      updateIngredient(existing.id, { amount, unit });
+    } else {
+      items.push({
+        id: activeIngredientCategory + "-" + Date.now() + "-" + Math.random().toString(16).slice(2),
+        category: activeIngredientCategory,
+        name,
+        amount,
+        unit,
+        custom: true,
+      });
+      saveIngredients(items);
+    }
+
     ingredientForm.reset();
     ingredientUnit.value = activeIngredientCategory === "meat" ? "斤" : "个";
     renderIngredients();
-    ingredientName.focus();
+    ingredientPreset.focus();
   });
 
   editorText.addEventListener("keydown", (event) => {

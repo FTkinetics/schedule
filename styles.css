@@ -362,6 +362,78 @@ textarea:focus {
   margin-top: 12px;
 }
 
+.ingredient-category-list {
+  display: grid;
+  gap: 10px;
+}
+
+.ingredient-category-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 58px;
+  padding: 12px 14px;
+  border: var(--line-width) solid var(--line);
+  border-radius: var(--border-radius-sm);
+  background: var(--panel);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ingredient-category-button:hover {
+  border-color: #d0d0d0;
+  background: #f9f9f9;
+}
+
+.ingredient-category-button strong {
+  font-size: 1rem;
+}
+
+.ingredient-category-button span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.ingredient-section-label {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.ingredient-detail-view {
+  display: grid;
+  gap: 0;
+}
+
+.ingredient-back {
+  justify-self: start;
+  min-height: 32px;
+  margin-bottom: 10px;
+  padding: 0 10px;
+  border: var(--line-width) solid var(--line);
+  border-radius: var(--border-radius-sm);
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ingredient-back:hover {
+  background: #f9f9f9;
+}
+
+.existing-label {
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+
+.ingredients-empty {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
 .ingredient-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -431,6 +503,15 @@ textarea:focus {
 .ingredient-row button:disabled {
   cursor: default;
   opacity: 0.35;
+}
+
+.ingredient-form {
+  grid-template-columns: 1.2fr 1.2fr 0.7fr 76px auto;
+}
+
+.ingredient-form input,
+.ingredient-form select {
+  min-height: 42px;
 }
 
 @media (max-width: 460px) {
