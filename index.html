@@ -1,104 +1,103 @@
 <!doctype html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#ffffff">
-    <title>周日程</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="icon.svg">
-    <link rel="stylesheet" href="styles.css">
-  </head>
-  <body>
-    <main class="app-shell">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">周日程</p>
-          <div class="week-title-row">
-            <h1 id="weekTitle">本周</h1>
-            <button id="ingredientsButton" class="ingredients-trigger" type="button">厨房食材</button>
-          </div>
-        </div>
-        <button id="installButton" class="icon-button hidden" type="button" title="添加到主屏幕" aria-label="添加到主屏幕">
-          <span aria-hidden="true">+</span>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f8fb" id="metaTheme">
+  <title>周日程</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow" id="eyebrow">我的周计划</p>
+        <h1 id="pageTitle">周日程</h1>
+        <p class="subtitle" id="pageSub">本周</p>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="installBtn" type="button" hidden title="添加到主屏幕" aria-label="添加到主屏幕">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
-      </header>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换深色模式" title="切换深色 / 浅色">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4 7 7 0 1 0 20 14.5z"/></svg>
+        </button>
+      </div>
+    </header>
 
-      <nav class="week-nav" aria-label="周切换">
-        <button id="prevWeek" type="button">上一周</button>
-        <button id="today" type="button">今天</button>
-        <button id="nextWeek" type="button">下一周</button>
+    <!-- ===== 日程视图 ===== -->
+    <section class="view" id="scheduleView">
+      <nav class="weeknav" aria-label="周切换">
+        <span class="range" id="weekRange">本周</span>
+        <div class="seg" role="group" aria-label="周导航">
+          <button id="prevW" type="button">上一周</button>
+          <button id="todayW" type="button" class="active">今天</button>
+          <button id="nextW" type="button">下一周</button>
+        </div>
       </nav>
-
-      <section class="schedule-wrap" aria-label="一周日程">
-        <div id="scheduleGrid" class="schedule-grid"></div>
-      </section>
-    </main>
-
-    <div id="overlay" class="overlay hidden"></div>
-    <section id="editor" class="editor hidden" aria-label="编辑日程" aria-modal="true" role="dialog">
-      <div class="editor-handle" aria-hidden="true"></div>
-      <div class="editor-heading">
-        <div>
-          <p id="editorDate" class="editor-meta"></p>
-          <h2 id="editorSlot">编辑</h2>
-        </div>
-        <button id="closeEditor" class="icon-button" type="button" title="关闭" aria-label="关闭">x</button>
-      </div>
-      <textarea id="editorText" rows="5" placeholder="写下要做的事情"></textarea>
-      <div class="editor-actions">
-        <button id="clearCell" class="secondary" type="button">清空</button>
-        <button id="saveCell" class="primary" type="button">完成</button>
+      <div class="grid-wrap" aria-label="一周日程">
+        <div class="grid" id="grid"></div>
       </div>
     </section>
 
-    <section id="ingredientsPanel" class="editor hidden" aria-label="厨房食材" aria-modal="true" role="dialog">
-      <div class="editor-handle" aria-hidden="true"></div>
-      <div class="editor-heading">
-        <div>
-          <p class="editor-meta">现在有的食材</p>
-          <h2>厨房食材</h2>
-        </div>
-        <button id="closeIngredients" class="icon-button" type="button" title="关闭" aria-label="关闭">x</button>
+    <!-- ===== 食材视图 ===== -->
+    <section class="view" id="pantryView" hidden>
+      <div class="pantry-filters" id="pantryFilters" role="group" aria-label="食材分类">
+        <button class="chip active" data-cat="all" type="button">全部</button>
+        <button class="chip" data-cat="meat" type="button">🥩 肉类</button>
+        <button class="chip" data-cat="veg" type="button">🥬 蔬菜</button>
       </div>
-      <div id="ingredientCategoryView" class="ingredient-category-view">
-        <p class="ingredient-section-label">选择分类</p>
-        <div class="ingredient-category-list">
-          <button class="ingredient-category-button" type="button" data-category="meat">
-            <strong>肉类</strong><span>猪肉、牛肉、羊肉等</span>
-          </button>
-          <button class="ingredient-category-button" type="button" data-category="vegetable">
-            <strong>蔬菜类</strong><span>土豆、西红柿、青菜等</span>
-          </button>
-        </div>
-      </div>
-      <div id="ingredientDetailView" class="ingredient-detail-view hidden">
-        <button id="ingredientBack" class="ingredient-back" type="button">返回分类</button>
-        <p id="ingredientCategoryTitle" class="ingredient-section-label">肉类</p>
-        <form id="ingredientForm" class="ingredient-form">
-          <select id="ingredientPreset" aria-label="选择常用食材">
-            <option value="">选择常用食材</option>
-          </select>
-          <input id="ingredientName" type="text" autocomplete="off" placeholder="没有的话手填">
-          <input id="ingredientAmount" type="number" inputmode="decimal" min="0" step="0.1" placeholder="数量">
-          <select id="ingredientUnit" aria-label="单位">
-            <option value="斤">斤</option>
-            <option value="个">个</option>
-            <option value="克">克</option>
-            <option value="袋">袋</option>
-            <option value="盒">盒</option>
-            <option value="瓶">瓶</option>
-            <option value="把">把</option>
-            <option value="颗">颗</option>
-          </select>
-          <button class="primary" type="submit">添加</button>
-        </form>
-        <p class="ingredient-section-label existing-label">现在有的食材</p>
-        <div id="ingredientsList" class="ingredients-list" aria-live="polite"></div>
-      </div>
-    </section>
 
-    <script src="app.js" defer></script>
-  </body>
+      <form class="add-bar" id="addForm">
+        <input id="addName" type="text" autocomplete="off" placeholder="食材名称，如 鸡蛋" aria-label="食材名称">
+        <input id="addAmt" type="number" inputmode="decimal" min="0" step="0.1" placeholder="数量" aria-label="数量">
+        <select id="addUnit" aria-label="单位">
+          <option>个</option><option>斤</option><option>克</option><option>袋</option><option>盒</option><option>瓶</option><option>把</option><option>颗</option><option>根</option>
+        </select>
+        <button class="btn-add" type="submit">添加</button>
+      </form>
+
+      <div class="quick">
+        <p class="qlabel">常用一键加</p>
+        <div class="quick-row" id="quickRow"></div>
+      </div>
+
+      <div class="pantry-list" id="pantryList"></div>
+    </section>
+  </div>
+
+  <!-- 底部 Tab -->
+  <nav class="tabbar" id="tabbar" aria-label="主导航">
+    <button class="tab active" data-view="schedule" type="button">
+      <span class="ti">📅</span>日程
+    </button>
+    <button class="tab" data-view="pantry" type="button">
+      <span class="ti">🧺</span>食材
+    </button>
+  </nav>
+
+  <!-- 编辑器抽屉 -->
+  <div class="overlay" id="overlay"></div>
+  <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="编辑日程">
+    <div class="sheet-handle"></div>
+    <div class="sheet-row">
+      <div>
+        <p class="meta" id="sheetMeta">周一 · 8月4日</p>
+        <h2 id="sheetSlot">上午 08:30–09:30</h2>
+      </div>
+      <button class="sheet-close" id="sheetClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <textarea id="sheetText" rows="5" placeholder="写下这个时段的安排，比如『写周报』或『午饭：番茄炒蛋』"></textarea>
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" id="sheetClear" type="button">清空</button>
+      <button class="btn btn-primary" id="sheetSave" type="button">完成</button>
+    </div>
+  </section>
+
+  <script src="app.js" defer></script>
+</body>
 </html>

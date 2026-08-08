@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>周日程 · 界面设计方案（高保真原型）</title>
+<style>
+  /* ============================================================
+     DESIGN TOKENS — 清爽简约 / 双主题
+     ============================================================ */
+  :root {
+    --bg: #f6f8fb;
+    --surface: #ffffff;
+    --surface-2: #f1f5f9;
+    --ink: #0f172a;
+    --ink-2: #334155;
+    --muted: #64748b;
+    --line: #e7edf3;
+    --line-strong: #d4dde8;
+    --primary: #2563eb;
+    --primary-ink: #1d4ed8;
+    --primary-soft: #eef4ff;
+    --today-bar: #2563eb;
+
+    /* 时间块分类（温和 tint，非高饱和） */
+    --lunch-tint: #fff6ec;
+    --lunch-ink: #b45309;
+    --eve-tint: #eef0ff;
+    --eve-ink: #4338ca;
+    --free-tint: #f4f7fb;
+
+    --radius: 16px;
+    --radius-sm: 11px;
+    --radius-pill: 999px;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06);
+    --shadow-md: 0 4px 14px rgba(15,23,42,.07), 0 2px 6px rgba(15,23,42,.05);
+    --shadow-lg: 0 18px 50px rgba(15,23,42,.16);
+    --ease: cubic-bezier(.22, 1, .36, 1); /* ease-out-quart */
+    --space: 4px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    --maxw: 960px;
+    --tabbar-h: 64px;
+  }
+
+  [data-theme="dark"] {
+    --bg: #0a0f1a;
+    --surface: #111827;
+    --surface-2: #0e1623;
+    --ink: #e7eef6;
+    --ink-2: #c3cedb;
+    --muted: #8595a6;
+    --line: #1d293b;
+    --line-strong: #2a3a4f;
+    --primary: #5b92ff;
+    --primary-ink: #7aa6ff;
+    --primary-soft: #16263f;
+    --today-bar: #5b92ff;
+    --lunch-tint: #2a1f12;
+    --lunch-ink: #f0b072;
+    --eve-tint: #1b2042;
+    --eve-ink: #aab4ff;
+    --free-tint: #131c2b;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+    --shadow-md: 0 6px 18px rgba(0,0,0,.45);
+    --shadow-lg: 0 22px 60px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-variant-numeric: tabular-nums;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 6px; }
+
+  /* ============================================================
+     APP SHELL
+     ============================================================ */
+  .app {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: calc(20px + env(safe-area-inset-top)) 18px calc(var(--tabbar-h) + 28px);
+    min-height: 100%;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  .eyebrow {
+    margin: 0 0 6px;
+    font-size: .72rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .topbar h1 {
+    margin: 0;
+    font-size: clamp(1.5rem, 1rem + 2.4vw, 2.05rem);
+    font-weight: 700;
+    letter-spacing: -.018em;
+    line-height: 1.1;
+  }
+  .subtitle {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: .92rem;
+  }
+
+  .theme-toggle {
+    flex: none;
+    width: 42px; height: 42px;
+    display: grid; place-items: center;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-sm);
+    transition: transform .25s var(--ease), background .25s var(--ease), border-color .25s var(--ease);
+  }
+  .theme-toggle:hover { transform: translateY(-1px); border-color: var(--line-strong); }
+  .theme-toggle svg { width: 20px; height: 20px; }
+  [data-theme="light"] .icon-moon { display: none; }
+  [data-theme="dark"]  .icon-sun  { display: none; }
+
+  /* ============================================================
+     WEEK NAV (日程模块)
+     ============================================================ */
+  .weeknav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .weeknav .range {
+    font-weight: 600;
+    color: var(--ink-2);
+    font-size: .95rem;
+  }
+  .seg {
+    display: inline-flex;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 3px;
+    gap: 2px;
+  }
+  .seg button {
+    padding: 8px 15px;
+    border-radius: var(--radius-pill);
+    color: var(--muted);
+    font-size: .88rem;
+    font-weight: 600;
+    transition: color .2s var(--ease), background .2s var(--ease);
+    white-space: nowrap;
+  }
+  .seg button:hover { color: var(--ink); }
+  .seg button.active {
+    background: var(--surface);
+    color: var(--primary-ink);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ============================================================
+     SCHEDULE GRID
+     ============================================================ */
+  .grid-wrap {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 70px repeat(7, minmax(92px, 1fr));
+    min-width: 720px;
+  }
+  .corner, .day-head, .time-head, .cell {
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .corner {
+    position: sticky; left: 0; top: 0; z-index: 3;
+    background: var(--surface);
+  }
+  .day-head {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--surface);
+    min-height: 60px;
+    padding: 10px 6px;
+    text-align: center;
+  }
+  .day-head .dn { display: block; font-weight: 700; font-size: .9rem; }
+  .day-head .dd { display: block; margin-top: 3px; color: var(--muted); font-size: .74rem; }
+  .day-head.today {
+    background: var(--primary-soft);
+  }
+  .day-head.today .dn { color: var(--primary-ink); }
+  .day-head.today .dd { color: var(--primary-ink); opacity: .8; }
+  /* 今天列左侧强调条 */
+  .day-head.today, .cell.today { box-shadow: inset 3px 0 0 var(--today-bar); }
+
+  .time-head {
+    position: sticky; left: 0; z-index: 1;
+    background: var(--surface);
+    min-height: 76px;
+    padding: 10px 8px;
+    color: var(--muted);
+    font-size: .72rem;
+    line-height: 1.35;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .time-head .tl { color: var(--ink-2); font-weight: 700; font-size: .78rem; margin-bottom: 3px; }
+
+  .cell {
+    position: relative;
+    min-height: 76px;
+    margin: 0;
+    padding: 9px 10px;
+    text-align: left;
+    background: var(--surface);
+    overflow: hidden;
+    transition: background .18s var(--ease), transform .18s var(--ease), box-shadow .18s var(--ease);
+  }
+  .cell:hover { background: var(--free-tint); box-shadow: var(--shadow-sm); transform: translateY(-1px); z-index: 1; }
+  .cell.lunch { background: var(--lunch-tint); }
+  .cell.lunch:hover { background: var(--lunch-tint); filter: brightness(.985); }
+  .cell.eve { background: var(--eve-tint); }
+  .cell.eve:hover { background: var(--eve-tint); filter: brightness(.985); }
+  .cell .tag {
+    position: absolute; top: 8px; right: 8px;
+    font-size: .82rem; line-height: 1; opacity: .9;
+  }
+  .cell .txt {
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: .82rem; line-height: 1.4; color: var(--ink);
+    white-space: pre-wrap; overflow-wrap: anywhere;
+    margin-top: 2px;
+  }
+  .cell .txt.empty { color: var(--muted); opacity: .55; font-weight: 500; }
+
+  /* ============================================================
+     BOTTOM SHEET (编辑器)
+     ============================================================ */
+  .overlay {
+    position: fixed; inset: 0; z-index: 40;
+    background: rgba(8,12,20,.42);
+    opacity: 0; visibility: hidden;
+    transition: opacity .3s var(--ease), visibility .3s var(--ease);
+  }
+  .overlay.show { opacity: 1; visibility: visible; }
+
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    background: var(--surface);
+    border-radius: 22px 22px 0 0;
+    box-shadow: var(--shadow-lg);
+    padding: 10px 18px calc(20px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+    transition: transform .34s var(--ease);
+    max-height: 84vh;
+    display: flex; flex-direction: column;
+  }
+  .sheet.show { transform: translateY(0); }
+  .sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: var(--line-strong); margin: 2px auto 14px; }
+  .sheet-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .sheet-row .meta { color: var(--muted); font-size: .82rem; margin: 0 0 4px; }
+  .sheet-row h2 { margin: 0; font-size: 1.12rem; }
+  .sheet-close {
+    width: 36px; height: 36px; border-radius: 10px; flex: none;
+    background: var(--surface-2); color: var(--ink-2); font-size: 1.1rem; line-height: 1;
+    display: grid; place-items: center;
+    transition: background .2s var(--ease);
+  }
+  .sheet-close:hover { background: var(--line); }
+  .sheet textarea {
+    width: 100%; min-height: 120px; resize: vertical;
+    border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: 13px 14px; background: var(--surface-2); color: var(--ink);
+    font-family: inherit; font-size: .98rem; line-height: 1.5;
+    transition: border-color .2s var(--ease), box-shadow .2s var(--ease);
+  }
+  .sheet textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent); }
+  .sheet-actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; margin-top: 14px; }
+  .btn {
+    min-height: 48px; border-radius: var(--radius-sm); font-weight: 600; font-size: .95rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    transition: transform .18s var(--ease), background .2s var(--ease), border-color .2s var(--ease);
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-ghost { background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); }
+  .btn-ghost:hover { background: var(--line); }
+  .btn-primary { background: var(--primary); color: #fff; box-shadow: var(--shadow-sm); }
+  .btn-primary:hover { background: var(--primary-ink); }
+
+  /* ============================================================
+     PANTRY (食材模块)
+     ============================================================ */
+  .pantry-filters {
+    display: inline-flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .chip {
+    padding: 8px 14px; border-radius: var(--radius-pill);
+    background: var(--surface); border: 1px solid var(--line);
+    color: var(--muted); font-weight: 600; font-size: .86rem;
+    transition: all .2s var(--ease);
+  }
+  .chip:hover { border-color: var(--line-strong); color: var(--ink); }
+  .chip.active { background: var(--primary-soft); border-color: transparent; color: var(--primary-ink); }
+
+  .pantry-list { display: flex; flex-direction: column; gap: 10px; }
+  .ing {
+    display: grid;
+    grid-template-columns: 38px 1fr auto auto auto;
+    align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+  }
+  .ing:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .ing .emo { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-size: 1.15rem; background: var(--surface-2); }
+  .ing .name { font-weight: 600; }
+  .stepper { display: inline-flex; align-items: center; gap: 4px; background: var(--surface-2); border-radius: var(--radius-pill); padding: 3px; }
+  .stepper button { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-2); font-size: 1.1rem; transition: background .15s var(--ease); }
+  .stepper button:hover { background: var(--line); }
+  .stepper .amt { min-width: 30px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ing .unit { color: var(--muted); font-size: .85rem; min-width: 28px; }
+  .ing .del { width: 34px; height: 34px; border-radius: 9px; color: var(--muted); display: grid; place-items: center; transition: background .15s var(--ease), color .15s var(--ease); }
+  .ing .del:hover { background: color-mix(in srgb, #ef4444 12%, transparent); color: #ef4444; }
+
+  .add-bar {
+    display: grid;
+    grid-template-columns: 1fr 72px 84px auto;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .add-bar input, .add-bar select {
+    height: 46px; padding: 0 12px;
+    border: 1px solid var(--line); border-radius: var(--radius-sm);
+    background: var(--surface-2); color: var(--ink); font-family: inherit; font-size: .92rem;
+    min-width: 0;
+  }
+  .add-bar input:focus, .add-bar select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent); }
+  .add-bar .btn-add { background: var(--primary); color: #fff; border-radius: var(--radius-sm); font-weight: 600; padding: 0 16px; height: 46px; }
+  .add-bar .btn-add:hover { background: var(--primary-ink); }
+
+  .quick { margin-bottom: 18px; }
+  .quick .qlabel { color: var(--muted); font-size: .8rem; margin: 0 0 8px; }
+  .quick-row { display: flex; flex-wrap: wrap; gap: 7px; }
+  .quick .q {
+    padding: 7px 12px; border-radius: var(--radius-pill);
+    background: var(--surface); border: 1px dashed var(--line-strong);
+    color: var(--ink-2); font-size: .84rem; font-weight: 500;
+    transition: all .18s var(--ease);
+  }
+  .quick .q:hover { border-style: solid; border-color: var(--primary); color: var(--primary-ink); transform: translateY(-1px); }
+
+  .empty {
+    text-align: center; padding: 48px 20px; color: var(--muted);
+  }
+  .empty .e-emo { font-size: 2.4rem; display: block; margin-bottom: 12px; }
+  .empty p { margin: 0; font-size: .95rem; }
+
+  /* ============================================================
+     TAB BAR
+     ============================================================ */
+  .tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    display: flex;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: saturate(1.4) blur(14px);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px);
+    border-top: 1px solid var(--line);
+  }
+  .tabbar::before {
+    content: ""; position: absolute; top: 0; height: 2px; width: 50%;
+    background: var(--primary); border-radius: 2px;
+    transform: translateX(var(--tab-x, 0%));
+    transition: transform .3s var(--ease);
+  }
+  .tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    color: var(--muted); font-size: .74rem; font-weight: 600;
+    transition: color .2s var(--ease);
+  }
+  .tab .ti { font-size: 1.25rem; line-height: 1; transition: transform .2s var(--ease); }
+  .tab.active { color: var(--primary-ink); }
+  .tab.active .ti { transform: translateY(-1px) scale(1.05); }
+
+  .view { animation: fade .3s var(--ease); }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  [hidden] { display: none !important; }
+
+  /* ============================================================
+     RESPONSIVE — 桌面精选
+     ============================================================ */
+  @media (min-width: 720px) {
+    .app { padding-inline: 24px; }
+    .grid { grid-template-columns: 92px repeat(7, minmax(0, 1fr)); min-width: 0; }
+    .grid-wrap { overflow: visible; }
+    .sheet { left: 50%; right: auto; bottom: 32px; width: min(460px, calc(100% - 32px)); transform: translate(-50%, 100%); border-radius: 20px; }
+    .sheet.show { transform: translate(-50%, 0); }
+    .add-bar { grid-template-columns: 1fr 90px 100px auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow" id="eyebrow">我的周计划</p>
+        <h1 id="pageTitle">周日程</h1>
+        <p class="subtitle" id="pageSub">8月4日 – 8月10日</p>
+      </div>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换深色模式" title="切换深色 / 浅色">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4 7 7 0 1 0 20 14.5z"/></svg>
+      </button>
+    </header>
+
+    <!-- ===== 日程视图 ===== -->
+    <section class="view" id="scheduleView">
+      <nav class="weeknav" aria-label="周切换">
+        <span class="range" id="weekRange">8月4日 – 8月10日</span>
+        <div class="seg" role="group" aria-label="周导航">
+          <button id="prevW" type="button">上一周</button>
+          <button id="todayW" type="button" class="active">今天</button>
+          <button id="nextW" type="button">下一周</button>
+        </div>
+      </nav>
+      <div class="grid-wrap" aria-label="一周日程">
+        <div class="grid" id="grid"></div>
+      </div>
+    </section>
+
+    <!-- ===== 食材视图 ===== -->
+    <section class="view" id="pantryView" hidden>
+      <div class="pantry-filters" id="pantryFilters" role="group" aria-label="食材分类">
+        <button class="chip active" data-cat="all" type="button">全部</button>
+        <button class="chip" data-cat="meat" type="button">🥩 肉类</button>
+        <button class="chip" data-cat="veg" type="button">🥬 蔬菜</button>
+      </div>
+
+      <form class="add-bar" id="addForm">
+        <input id="addName" type="text" autocomplete="off" placeholder="食材名称，如 鸡蛋" aria-label="食材名称">
+        <input id="addAmt" type="number" inputmode="decimal" min="0" step="0.1" placeholder="数量" aria-label="数量">
+        <select id="addUnit" aria-label="单位">
+          <option>个</option><option>斤</option><option>克</option><option>袋</option><option>盒</option><option>瓶</option><option>把</option><option>颗</option><option>根</option>
+        </select>
+        <button class="btn-add" type="submit">添加</button>
+      </form>
+
+      <div class="quick">
+        <p class="qlabel">常用一键加</p>
+        <div class="quick-row" id="quickRow"></div>
+      </div>
+
+      <div class="pantry-list" id="pantryList"></div>
+    </section>
+  </div>
+
+  <!-- 底部 Tab -->
+  <nav class="tabbar" id="tabbar" aria-label="主导航">
+    <button class="tab active" data-view="schedule" type="button">
+      <span class="ti">📅</span>日程
+    </button>
+    <button class="tab" data-view="pantry" type="button">
+      <span class="ti">🧺</span>食材
+    </button>
+  </nav>
+
+  <!-- 编辑器抽屉 -->
+  <div class="overlay" id="overlay"></div>
+  <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="编辑日程">
+    <div class="sheet-handle"></div>
+    <div class="sheet-row">
+      <div>
+        <p class="meta" id="sheetMeta">周一 · 8月4日</p>
+        <h2 id="sheetSlot">上午 08:30–09:30</h2>
+      </div>
+      <button class="sheet-close" id="sheetClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <textarea id="sheetText" rows="5" placeholder="写下这个时段的安排，比如『写周报』或『午饭：番茄炒蛋』"></textarea>
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" id="sheetClear" type="button">清空</button>
+      <button class="btn btn-primary" id="sheetSave" type="button">完成</button>
+    </div>
+  </section>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- 主题 ---------- */
+  var root = document.documentElement;
+  var savedTheme = localStorage.getItem("ui-proto:theme");
+  if (savedTheme) root.setAttribute("data-theme", savedTheme);
+  document.getElementById("themeToggle").addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    localStorage.setItem("ui-proto:theme", next);
+  });
+
+  /* ---------- 日程数据 ---------- */
+  var STORE = "ui-proto:cells";
+  var cells = {};
+  try { cells = JSON.parse(localStorage.getItem(STORE) || "{}"); } catch (e) {}
+
+  var dayNames = ["周一","周二","周三","周四","周五","周六","周日"];
+  var slots = [
+    { id:"0830", label:"上午", time:"08:30–09:30" },
+    { id:"0930", label:"上午", time:"09:30–10:30" },
+    { id:"1030", label:"上午", time:"10:30–11:30" },
+    { id:"lunch", label:"午间", time:"11:30–14:30", def:"午饭", cls:"lunch", tag:"🍚" },
+    { id:"1430", label:"下午", time:"14:30–15:30" },
+    { id:"1530", label:"下午", time:"15:30–16:30" },
+    { id:"1630", label:"下午", time:"16:30–17:30" },
+    { id:"eve", label:"晚上", time:"17:30 以后", cls:"eve", tag:"🌙" }
+  ];
+
+  function pad(n){ return String(n).padStart(2,"0"); }
+  function dkey(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function fmt(d){ return (d.getMonth()+1)+"月"+d.getDate()+"日"; }
+  function addDays(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); x.setHours(0,0,0,0); return x; }
+  function mondayOf(d){ var x=new Date(d); x.setHours(0,0,0,0); var day=x.getDay(); var off=day===0?-6:1-day; return addDays(x,off); }
+
+  var curMonday = mondayOf(new Date());
+  var grid = document.getElementById("grid");
+
+  function cellValue(key, slot){
+    var v = cells[key+":"+slot.id];
+    if (v !== undefined && v !== null) return v;
+    return slot.def || "";
+  }
+
+  function renderGrid(){
+    var dates = []; for(var i=0;i<7;i++) dates.push(addDays(curMonday,i));
+    var todayKey = dkey(new Date());
+    var start=fmt(dates[0]), end=fmt(dates[6]);
+    document.getElementById("weekRange").textContent = start+" – "+end;
+    document.getElementById("pageSub").textContent = start+" – "+end;
+
+    grid.innerHTML = "";
+    var corner = document.createElement("div"); corner.className="corner"; grid.appendChild(corner);
+    dates.forEach(function(d,idx){
+      var head=document.createElement("div");
+      var isToday = dkey(d)===todayKey;
+      head.className="day-head"+(isToday?" today":"");
+      head.innerHTML='<span class="dn">'+dayNames[idx]+'</span><span class="dd">'+fmt(d)+'</span>';
+      grid.appendChild(head);
+    });
+    slots.forEach(function(slot){
+      var th=document.createElement("div"); th.className="time-head";
+      th.innerHTML='<span class="tl">'+slot.label+'</span>'+slot.time;
+      grid.appendChild(th);
+      dates.forEach(function(d,di){
+        var key=dkey(d);
+        var val=cellValue(key,slot);
+        var btn=document.createElement("button");
+        btn.type="button";
+        btn.className="cell "+(slot.cls||"")+(dkey(d)===todayKey?" today":"");
+        var inner='';
+        if(slot.tag) inner+='<span class="tag">'+slot.tag+'</span>';
+        inner+='<span class="txt'+(val.trim()?"":" empty")+'">'+escapeHtml(val.trim()?val:"添加安排")+'</span>';
+        btn.innerHTML=inner;
+        btn.addEventListener("click",function(){ openSheet(key,slot,dayNames[di],d); });
+        grid.appendChild(btn);
+      });
+    });
+  }
+
+  function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  /* ---------- 周导航 ---------- */
+  document.getElementById("prevW").addEventListener("click",function(){ curMonday=addDays(curMonday,-7); renderGrid(); });
+  document.getElementById("nextW").addEventListener("click",function(){ curMonday=addDays(curMonday,7); renderGrid(); });
+  document.getElementById("todayW").addEventListener("click",function(){ curMonday=mondayOf(new Date()); renderGrid(); });
+
+  /* ---------- 编辑器抽屉 ---------- */
+  var overlay=document.getElementById("overlay"), sheet=document.getElementById("sheet");
+  var sheetText=document.getElementById("sheetText");
+  var activeKey=null, activeSlot=null;
+  function openSheet(key,slot,dayName,d){
+    activeKey=key; activeSlot=slot;
+    document.getElementById("sheetMeta").textContent=dayName+" · "+fmt(d);
+    document.getElementById("sheetSlot").textContent=slot.label+" "+slot.time;
+    sheetText.value=cellValue(key,slot);
+    overlay.classList.add("show"); sheet.classList.add("show");
+    setTimeout(function(){ sheetText.focus(); },120);
+  }
+  function closeSheet(){ overlay.classList.remove("show"); sheet.classList.remove("show"); activeKey=null; }
+  document.getElementById("sheetClose").addEventListener("click",closeSheet);
+  overlay.addEventListener("click",closeSheet);
+  document.getElementById("sheetSave").addEventListener("click",function(){
+    if(!activeKey) return;
+    var v=sheetText.value.trim();
+    if(v) cells[activeKey+":"+activeSlot.id]=v; else delete cells[activeKey+":"+activeSlot.id];
+    localStorage.setItem(STORE,JSON.stringify(cells));
+    renderGrid(); closeSheet();
+  });
+  document.getElementById("sheetClear").addEventListener("click",function(){
+    if(!activeKey) return;
+    delete cells[activeKey+":"+activeSlot.id];
+    localStorage.setItem(STORE,JSON.stringify(cells));
+    renderGrid(); closeSheet();
+  });
+  sheetText.addEventListener("keydown",function(e){ if((e.ctrlKey||e.metaKey)&&e.key==="Enter") document.getElementById("sheetSave").click(); });
+
+  /* ---------- 食材库存 ---------- */
+  var ING="ui-proto:pantry";
+  var pantry = [
+    {id:"pork",cat:"meat",emo:"🥩",name:"猪肉",amt:2,unit:"斤"},
+    {id:"beef",cat:"meat",emo:"🥩",name:"牛肉",amt:1,unit:"斤"},
+    {id:"chicken",cat:"meat",emo:"🍗",name:"鸡肉",amt:3,unit:"个"},
+    {id:"fish",cat:"meat",emo:"🐟",name:"鱼",amt:1,unit:"条"},
+    {id:"potato",cat:"veg",emo:"🥔",name:"土豆",amt:5,unit:"个"},
+    {id:"tomato",cat:"veg",emo:"🍅",name:"西红柿",amt:4,unit:"个"},
+    {id:"cucumber",cat:"veg",emo:"🥒",name:"黄瓜",amt:2,unit:"根"},
+    {id:"greens",cat:"veg",emo:"🥬",name:"青菜",amt:1,unit:"把"}
+  ];
+  try { var p=JSON.parse(localStorage.getItem(ING)); if(Array.isArray(p)) pantry=p; } catch(e){}
+  var pantryCat="all";
+  var units=["个","斤","克","袋","盒","瓶","把","颗","根"];
+
+  function savePantry(){ localStorage.setItem(ING,JSON.stringify(pantry)); }
+  function catEmo(c){ return c==="meat"?"🥩":"🥬"; }
+
+  function renderPantry(){
+    var list=document.getElementById("pantryList");
+    list.innerHTML="";
+    var items=pantry.filter(function(it){ return pantryCat==="all"||it.cat===pantryCat; });
+    var total=pantry.length;
+    document.getElementById("pageSub").textContent="家里有什么 · 共 "+total+" 样";
+
+    if(!items.length){
+      list.innerHTML='<div class="empty"><span class="e-emo">🧺</span><p>这个分类还是空的，加点食材吧</p></div>';
+      return;
+    }
+    items.forEach(function(it){
+      var row=document.createElement("div"); row.className="ing";
+      row.innerHTML=
+        '<span class="emo">'+it.emo+'</span>'+
+        '<span class="name">'+escapeHtml(it.name)+'</span>'+
+        '<span class="stepper"><button type="button" data-act="dec" aria-label="减少">−</button>'+
+        '<span class="amt">'+it.amt+'</span>'+
+        '<button type="button" data-act="inc" aria-label="增加">+</button></span>'+
+        '<span class="unit">'+it.unit+'</span>'+
+        '<button class="del" type="button" aria-label="删除">🗑</button>';
+      row.querySelector('[data-act="dec"]').addEventListener("click",function(){ it.amt=Math.max(0,(+it.amt||0)-1); savePantry(); renderPantry(); });
+      row.querySelector('[data-act="inc"]').addEventListener("click",function(){ it.amt=(+it.amt||0)+1; savePantry(); renderPantry(); });
+      row.querySelector(".del").addEventListener("click",function(){ pantry=pantry.filter(function(x){return x.id!==it.id;}); savePantry(); renderPantry(); });
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("pantryFilters").addEventListener("click",function(e){
+    var b=e.target.closest(".chip"); if(!b) return;
+    document.querySelectorAll("#pantryFilters .chip").forEach(function(c){c.classList.remove("active");});
+    b.classList.add("active"); pantryCat=b.dataset.cat; renderPantry();
+  });
+
+  document.getElementById("addForm").addEventListener("submit",function(e){
+    e.preventDefault();
+    var name=document.getElementById("addName").value.trim();
+    var amt=document.getElementById("addAmt").value.trim();
+    var unit=document.getElementById("addUnit").value;
+    if(!name||amt==="") return;
+    var cat=/肉|鸡|鱼|猪|牛|羊|虾|蟹/.test(name)?"meat":"veg";
+    pantry.push({id:"x"+Date.now(),cat:cat,emo:catEmo(cat),name:name,amt:amt,unit:unit});
+    savePantry(); renderPantry();
+    this.reset(); document.getElementById("addName").focus();
+  });
+
+  var quick=["鸡蛋","米饭","白菜","豆腐","胡萝卜","洋葱","青椒","牛奶"];
+  var quickRow=document.getElementById("quickRow");
+  quick.forEach(function(q){
+    var b=document.createElement("button"); b.className="q"; b.type="button"; b.textContent="＋ "+q;
+    b.addEventListener("click",function(){
+      var cat=/肉|鸡|鱼|猪|牛|羊|虾|蟹/.test(q)?"meat":"veg";
+      var ex=pantry.find(function(x){return x.name===q;});
+      if(ex){ ex.amt=(+ex.amt||0)+1; } else { pantry.push({id:"x"+Date.now(),cat:cat,emo:catEmo(cat),name:q,amt:1,unit:"个"}); }
+      savePantry(); renderPantry();
+    });
+    quickRow.appendChild(b);
+  });
+
+  /* ---------- Tab 切换 ---------- */
+  var tabbar=document.getElementById("tabbar");
+  var views={ schedule:document.getElementById("scheduleView"), pantry:document.getElementById("pantryView") };
+  var titles={ schedule:["我的周计划","周日程"], pantry:["我的厨房","食材库存"] };
+  tabbar.addEventListener("click",function(e){
+    var t=e.target.closest(".tab"); if(!t) return;
+    var v=t.dataset.view;
+    document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("active");});
+    t.classList.add("active");
+    tabbar.style.setProperty("--tab-x", v==="schedule"?"0%":"100%");
+    views.schedule.hidden = v!=="schedule";
+    views.pantry.hidden = v!=="pantry";
+    document.getElementById("eyebrow").textContent=titles[v][0];
+    document.getElementById("pageTitle").textContent=titles[v][1];
+    document.getElementById("pageSub").textContent = v==="schedule"
+      ? (function(){var d=[];for(var i=0;i<7;i++)d.push(addDays(curMonday,i));return fmt(d[0])+" – "+fmt(d[6]);})()
+      : "家里有什么 · 共 "+pantry.length+" 样";
+  });
+
+  /* ---------- 初始化 ---------- */
+  renderGrid();
+  renderPantry();
+})();
+</script>
+</body>
+</html>
