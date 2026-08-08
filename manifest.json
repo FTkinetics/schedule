@@ -1,7 +1,7 @@
 {
   "name": "周日程",
   "short_name": "周日程",
-  "description": "简洁的一周日程表",
+  "description": "周日程与食材库存管理",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
